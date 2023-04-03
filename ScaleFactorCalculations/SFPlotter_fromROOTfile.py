@@ -1,7 +1,17 @@
+"""
+This Script prints 2D Scale factor histograms from a root file with proper make-up. We can omit some of the bins while printing. 
+
+
+
+inputs: The ROOT file containing the 2D SF histogram to be printed: filename and histogram name.
+
+outputs: .png file (fOutname) of the SF histogram.
+"""
+
+
 import os, ROOT
 import numpy as np
 
-## This is made for plotting SF2Ds from method2 using ROOT file sent by Mintu. Binning is different
 def isFloat( myFloat ):
     try:
         float(myFloat)
@@ -9,22 +19,9 @@ def isFloat( myFloat ):
     except:
         return False
 
-# def getSFs(etabin, ptbin):
-#     fileWithSFs = open("CrossTrigger_systCombined_SFs.txt", 'r')
-#     for line in fileWithSFs :
-#         modifiedLine = line.lstrip(' ').rstrip(' ').rstrip('\n')
-#         numbers = modifiedLine.split('\t')
-
-#         if len(numbers) > 0 and isFloat(numbers[0]):
-#             etaKey = ( float(numbers[0]), float(numbers[1]))
-#             ptKey  = ( float(numbers[2]), float(numbers[3]))
-#             if (etaKey == etabin ) and (ptKey == ptbin):
-#                 return [float(numbers[-6]),float(numbers[-5]),float(numbers[-4] ),float(numbers[-3]),float(numbers[-2]),float(numbers[-1])]
-
-
-def getSFs(etabin, ptbin):
-    file = ROOT.TFile("Method2.root", "READ")
-    hist = file.Get("EGamma_SF2D")
+def getSFs(filename, histname, etabin, ptbin):
+    file = ROOT.TFile(filename, "READ")
+    hist = file.Get(histname)
     nbins_x = hist.GetNbinsX()
     nbins_y = hist.GetNbinsY()
     for i in range(1, nbins_x+1):
@@ -39,12 +36,23 @@ def getSFs(etabin, ptbin):
             else:
                 continue
 
+## Inputs
+inputF = "inputs"
+inputfile = "preVFP.root"
+histname = "EGamma_SF2D"
+filename = os.path.join(inputF,inputfile)
 
-
+## Outputs
+outputF = "outputs"
+# outputfile = "preVFP.png"
+outputfile = inputfile.split(".")[0]+".png"
+fOutname = os.path.join(outputF,outputfile)
 
 ptbins = [(10.0, 20.0), (20.0, 35.0), (35.0, 50.0), (50.0, 100.0), (100.0, 200.0), (200.0, 500)]
-etabins = [(-2.1, -1.566), (-1.566, -1.4442), (-1.4442, -0.8), (-0.8, 0.0), 
-           (0.0, 0.8), (0.8, 1.4442), (1.4442, 1.566), (1.566, 2.1)]
+etabins = [(-2.1, -1.566), (-1.566, -1.444), (-1.444, -0.8), (-0.8, 0.0), 
+           (0.0, 0.8), (0.8, 1.444), (1.444, 1.566), (1.566, 2.1)]
+
+
 
 xbins = []
 ybins = []
@@ -90,10 +98,10 @@ for ix in range(1,h2.GetXaxis().GetNbins()+1):
                 for etaBin in etabins:
                     if h2.GetXaxis().GetBinLowEdge(ix) < etaBin[0] or h2.GetXaxis().GetBinUpEdge(ix) > etaBin[1]:
                         continue
-                    print(ptBin,etaBin,getSFs(etaBin, ptBin))
-                    h2.SetBinContent(ix,iy, getSFs(etaBin, ptBin)[0])
-                    h2.SetBinError(ix,iy, getSFs(etaBin, ptBin)[1])
-                    h2err.SetBinContent(ix,iy, getSFs(etaBin, ptBin)[1])
+                    print(ptBin,etaBin,getSFs(filename,histname,etaBin, ptBin))
+                    h2.SetBinContent(ix,iy, getSFs(filename,histname,etaBin, ptBin)[0])
+                    h2.SetBinError(ix,iy, getSFs(filename,histname,etaBin, ptBin)[1])
+                    h2err.SetBinContent(ix,iy, getSFs(filename,histname,etaBin, ptBin)[1])
 h2.GetXaxis().SetTitle("SuperCluster #eta")
 h2.GetYaxis().SetTitle("p_{T} [GeV]")
 h2err.GetXaxis().SetTitle("SuperCluster #eta")
@@ -126,4 +134,4 @@ h2err.SetMinimum(0)
 h2err.SetMaximum(h2err.GetMaximum())    
 h2err.DrawCopy("colz TEXT45")
 
-c2D.Print('Method2.png')
+c2D.Print(fOutname)

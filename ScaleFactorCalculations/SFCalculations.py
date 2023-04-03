@@ -1,5 +1,25 @@
+"""
+The script calculates the cross triggers as per the formula given in slide 19 of the https://mattermost.web.cern.ch/files/hri6ynr3n7y8zgbhuo9n8byoee/public?h=xPH1ebP7lefEXXBrVqKQ8gG4-O2wPOm6NvMD-G_nJUU.
+With the normal error propagation formula using 'uncertainities' python module.
+
+input: Root files for the 4 trigger bits, containing their efficiencies. These are the outputs of the module https://github.com/mukundshelake/egm_tnp_analysis.
+       Place the ROOT fies in the input folder.Provide the ROOT file names in line 74 onwards.
+output: Text file "outputs/CrossTrigger_systCombined_SFs.txt" containing the bin boundaries and different values (error) used in the formula and the calculated scale factors (erros); bin by bin.
+
+Note: We can choose which bins to plot; PROVIDED THAT THE CORRESPONDING BINS ARE ALREADY PRESENT IN THE ROOT FILE.
+      You can't play with the bin boundaries, you can simply omit or add bins (provided they are in root files)
+
+Import: uncertainties  
+
+Infra: python 3.10.10 and ROOT 6.26/10
+"""
+
+
+
+
+
 from uncertainties import ufloat
-import ROOT
+import ROOT, os
 
 def isFloat( myFloat ):
     try:
@@ -36,6 +56,12 @@ etabins = [(-2.5, -2.1), (-2.1, -1.566), (-1.566, -1.444), (-1.444, -0.8), (-0.8
 
 # print(get("LX.root", 'data', 'value', etabins[0], ptbins[0]))
 
+# Input and Output folders
+inputF = "inputs"
+outputF = "outputs"
+
+
+
 SFFilename = 'CrossTrigger_systCombined_SFs.txt'
 fOut = open( SFFilename,'w')
 
@@ -45,14 +71,14 @@ fOut.write("### var2 : el_pt" + '\n')
 
 for ptbin in ptbins:
     for etabin in etabins:
-        SLF_D = get("SLF.root", 'data', etabin, ptbin)
-        SLF_M = get("SLF.root", 'mc', etabin, ptbin)
-        LX_D = get("LX.root", 'data', etabin, ptbin)
-        LX_M = get("LX.root", 'mc', etabin, ptbin)
-        JX_D = get("JX.root", 'data', etabin, ptbin)
-        JX_M = get("JX.root", 'mc', etabin, ptbin)
-        SLFandLX_D = get("SLFandLX.root", 'data', etabin, ptbin)
-        SLFandLX_M = get("SLFandLX.root", 'mc', etabin, ptbin)
+        SLF_D = get(os.path.join(inputF, "SLF.root"), 'data', etabin, ptbin)
+        SLF_M = get(os.path.join(inputF, "SLF.root"), 'mc', etabin, ptbin)
+        LX_D = get(os.path.join(inputF, "LX.root"), 'data', etabin, ptbin)
+        LX_M = get(os.path.join(inputF, "LX.root"), 'mc', etabin, ptbin)
+        JX_D = get(os.path.join(inputF, "JX.root"), 'data', etabin, ptbin)
+        JX_M = get(os.path.join(inputF, "JX.root"), 'mc', etabin, ptbin)
+        SLFandLX_D = get(os.path.join(inputF, "SLFandLX.root"), 'data', etabin, ptbin)
+        SLFandLX_M = get(os.path.join(inputF, "SLFandLX.root"), 'mc', etabin, ptbin)
         eD_SLF = ufloat(SLF_D[0], SLF_D[1])
         eM_SLF = ufloat(SLF_M[0], SLF_M[1])
         eD_LX = ufloat(LX_D[0], LX_D[1])
@@ -81,7 +107,6 @@ for ptbin in ptbins:
             )
         print(astr)
         fOut.write(astr + '\n')
-
 fOut.close()
         
 
